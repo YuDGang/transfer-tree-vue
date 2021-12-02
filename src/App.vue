@@ -3,7 +3,7 @@
     <h3>Tree Transfer</h3>
     <tree-transfer
       ref="treeTransfer"
-      :rightCode="codes"
+      :defaultRightCode="codes"
       :treeData="tree"
       :titles="['待选择', '已选择']"
       filterable
@@ -18,96 +18,84 @@
 </template>
 
 <script>
-import TreeTransfer from "./components/TreeTransfer/index.vue";
+import TreeTransfer from "./components/TreeTransfer/index.vue"
+import constants from "./constants"
 
 export default {
-	name: "App",
+  name: "App",
 
-	components: {
-		TreeTransfer
-	},
+  components: {
+    TreeTransfer
+  },
 
-	data () {
-		return {
-			tree: [],
-			codes: []
-		};
-	},
+  data () {
+    return {
+      tree: [],
+      codes: [
+        "-dep2-idx0-ran0.0976371218823473",
+        "-dep2-idx1-ran0.8893879805690843"
+      ]
+    }
+  },
 
-	created () {
-		this.greTree();
-	},
+  created () {
+    this.greTree()
+  },
 
-	methods: {
-		onTransferChange (val) {
-			console.log("val: ", val);
-		},
+  methods: {
+    onTransferChange (val) {
+      console.log("val: ", val)
+    },
 
-		greTree () {
-			const greTreeNodeChildren = (
-				depth = 0,
-				childNum = 1
-			) => {
-				const childrenData = Array(
-					childNum
-				)
-					.fill(0)
-					.map((_, idx) => {
-						const suf =
-							"-dep" +
-							depth +
-							"-idx" +
-							idx.toString();
-						return {
-							deptCode:
-								suf +
-								"-ran" +
-								Math.random(),
-							depth: depth,
-							label: "label" + suf,
-							children: []
-						};
-					});
+    greTree () {
+      // 节点
+      const greNode = (labelId, depth, rank) => {
+        const suf = labelId + "-dep" + depth + "-" + rank
+        return {
+          deptCode: suf,
+          depth: depth,
+          label: "label" + suf,
+          children: []
+        }
+      }
 
-				return childrenData;
-			};
+      // 数组
+      const greChild = (childNum, labelId, depth) => {
+        return Array(childNum)
+          .fill(0)
+          .map((item, rank) => greNode(labelId, depth, rank))
+      }
 
-			const greWholeTree = (
-				{
-					depth = 0,
-					maxDepth = 1,
-					childNum = 1
-				},
-				targetArr = []
-			) => {
-				targetArr.push(
-					...greTreeNodeChildren(
-						depth,
-						childNum
-					)
-				);
-				if (depth < maxDepth) {
-					depth++;
-					targetArr.forEach(item => {
-						greWholeTree(
-							{
-								depth,
-								maxDepth,
-								childNum
-							},
-							item.children
-						);
-					});
-				}
-				return targetArr;
-			};
+      // 递归
+      const greTree = ({ maxDepth, childNum }, depth, targetArr, labelId) => {
+        if (depth >= maxDepth) return
+        depth++
+        targetArr.push(...greChild(childNum, labelId, depth))
+        targetArr.forEach((item) =>
+          greTree({ maxDepth, childNum }, depth, item.children, labelId)
+        )
+      }
 
-			const treeArr = greWholeTree({
-				maxDepth: 3,
-				childNum: 5
-			});
+      // 初始
+      const greWholeTree = ({ maxDepth = 1, childNum = 1 }) => {
+        const depth = 1
+        const targetArr = Array(childNum)
+          .fill(0)
+          .map((item, idx) => greNode(idx, depth, idx))
+
+        targetArr.forEach((item, idx) =>
+          greTree({ maxDepth, childNum }, depth, item.children, idx)
+        )
+
+        return targetArr
+      }
+
+      const treeArr = greWholeTree({
+        maxDepth: 4,
+        childNum: 5
+      })
       this.tree = treeArr
-		}
-	}
-};
+    }
+  }
+}
 </script>

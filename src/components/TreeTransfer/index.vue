@@ -46,7 +46,7 @@
     <!-- right -->
     <transfer-panel
       ref="rightPanel"
-      v-bind="{...$props, ...$data}"
+      v-bind="{ ...$props, ...$data }"
       :treeData="treeDataRight"
       :title="titles[1]"
       :default-checked="rightDefaultChecked"
@@ -68,7 +68,7 @@ export default {
   },
 
   props: {
-    rightCode: {
+    defaultRightCode: {
       type: Array,
       default () {
         return []
@@ -144,7 +144,7 @@ export default {
     },
     ownKey: {
       type: String,
-      default: 'deptCode'
+      default: "deptCode"
     },
     searchPlaceholder: {
       type: String,
@@ -156,11 +156,11 @@ export default {
     },
     beforeAddToRight: {
       type: Function,
-      default: () => new Promise(resolve => resolve())
+      default: () => new Promise((resolve) => resolve())
     },
     beforeAddToLeft: {
       type: Function,
-      default: () => new Promise(resolve => resolve())
+      default: () => new Promise((resolve) => resolve())
     }
   },
 
@@ -195,20 +195,19 @@ export default {
   watch: {
     treeData: {
       handler () {
+        const paths = this.findAllPaths(this.treeData, this.defaultRightCode)
         // left
-        const leftData = this.filterTreeNode(
-          this.treeData,
-          item => !this.rightCode.includes(item[this.ownKey])
+        this.addCode(this.treeData, this.treeCode_left)
+        this.treeCode_left = this.treeCode_left.filter(
+          (code) => !this.defaultRightCode.includes(code)
         )
-        this.addCode(leftData, this.treeCode_left)
         // right
-        this.treeCode_right = this.rightCode
+        this.treeCode_right = [...this.defaultRightCode, ...paths]
       },
       deep: true,
       immediate: true
     }
   },
-
 
   methods: {
     // # utils
@@ -216,10 +215,11 @@ export default {
     forEachTreeNode (tree, callback) {
       if (!tree && typeof tree !== "object") return
 
-      const loop = (treeArr = [], parent) => {
+      const loop = (treeArr = [], parent, path = []) => {
+        if (parent) path.push(parent[this.ownKey])
         treeArr.forEach((item, idx, children) => {
-          callback(item, idx, children, parent)
-          if (item.children) loop(item.children)
+          callback(item, idx, children, path)
+          if (item.children) loop(item.children, item, [...path])
         })
       }
       // 数组 or 对象
@@ -234,9 +234,9 @@ export default {
 
       let tree = JSON.parse(JSON.stringify(_tree))
 
-      const loop = treeObj => {
+      const loop = (treeObj) => {
         treeObj.children = (treeObj.children || []).filter(callback)
-        treeObj.children.forEach(obj => loop(obj))
+        treeObj.children.forEach((obj) => loop(obj))
       }
       // 数组 or 对象
       tree = tree.length ? { children: tree } : tree
@@ -246,16 +246,27 @@ export default {
       return tree.children
     },
 
+    // 寻找所有父级路径 集合
+    findAllPaths (_tree, codes) {
+      const allPath = []
+      this.forEachTreeNode(_tree, (item, idx, children, path) => {
+        if (codes.includes(item[this.ownKey])) {
+          allPath.push(...path)
+        }
+      })
+      return Array.from(new Set(allPath))
+    },
+
     // 递归 并根据所选则的树 新增code
     addCode (checkedTree, codeArr) {
-      this.forEachTreeNode(checkedTree, item => {
+      this.forEachTreeNode(checkedTree, (item) => {
         codeArr.push(item[this.ownKey])
       })
     },
 
     // 递归 并获取所需data (left or right)
     getTreeData (targetCode) {
-      const treeData = this.filterTreeNode(this.treeData, item =>
+      const treeData = this.filterTreeNode(this.treeData, (item) =>
         targetCode.includes(item[this.ownKey])
       )
 
@@ -266,7 +277,7 @@ export default {
     moveCode (source, target, codeArr, halfCodeArr) {
       target.push(...codeArr)
       target.push(...halfCodeArr)
-      const codeAfterMove = source.filter(item => !codeArr.includes(item))
+      const codeAfterMove = source.filter((item) => !codeArr.includes(item))
       source.length = 0
       source.push(...codeAfterMove)
     },
@@ -297,13 +308,15 @@ export default {
       this.checked_left = []
 
       this.$nextTick(() => {
-        this.expandedKeys_right = expandedCodes 
+        this.expandedKeys_right = expandedCodes
         this.expandedKeys_left = expandedCodes
       })
     },
 
     addToLeft () {
-      this.outputData = this.outputData.filter(data => !this.checked_right.includes(data[this.ownKey]))
+      this.outputData = this.outputData.filter(
+        (data) => !this.checked_right.includes(data[this.ownKey])
+      )
 
       this.$emit("change", this.outputData)
 

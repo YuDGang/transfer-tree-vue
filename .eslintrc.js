@@ -17,7 +17,7 @@ module.exports = {
 	// ],
 	rules: {
 		"comma-dangle": 1, // 禁止尾随逗号
-		// semi: [1, "never"], // 禁止尾随分号
+		semi: [1, "never"], // 禁止尾随分号
 		"no-undef": 2,
 		"no-unused-vars": 1, //此规则旨在消除未使用的变量、函数和函数参数。
 		"no-sequences": 1, // 禁止使用逗号运算符

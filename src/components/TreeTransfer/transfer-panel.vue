@@ -138,14 +138,6 @@ export default {
     }
   },
 
-  watch: {
-    defaultExpandedKeys: {
-      handler (defaultExpandedKeys) {
-        console.log('defaultExpandedKeys: ', defaultExpandedKeys);
-      }
-    }
-  },
-
   methods: {
     onTreeCheck (checked, checkedInfo, isChecked) {
       this.$emit("checked-change", checked, checkedInfo, isChecked)
@@ -160,11 +152,11 @@ export default {
 
 <style lang="less" scoped>
 .el-transfer-panel {
-  width: calc(~'50% - 90px');
+  width: calc(~"50% - 90px");
   height: 100%;
   min-height: 440px;
   &__body {
-    height: 100%
+    height: 100%;
   }
 
   .el-transfer-panel__body.is-filterable .el-scrollbar {
